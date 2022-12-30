@@ -51,7 +51,7 @@ def boolean_similarity(query_to_search, index):
     return sim_dict
 
 
-def merge_results(title_scores, body_scores, title_weight=0.5, text_weight=0.5, N=3):
+def merge_results(title_scores, body_scores, title_weight=0.5, text_weight=0.5):
     """
     This function merge and sort documents retrieved by its weighte score (e.g., title and body).
 
@@ -82,7 +82,7 @@ def merge_results(title_scores, body_scores, title_weight=0.5, text_weight=0.5, 
     return merge_dict
 
 
-def BM25(query_to_search, index, AVGDL, b=0.75, k1=1.5, k3=1.5, base_log=10):
+def BM25(query_to_search, index, b=0.75, k1=1.5, k3=1.5, base_log=10):
     sim_dict = defaultdict(float)
     query_dict = Counter(query_to_search)
     N = len(index.DL)
@@ -91,8 +91,9 @@ def BM25(query_to_search, index, AVGDL, b=0.75, k1=1.5, k3=1.5, base_log=10):
         wqtf = query_dict[w]
         for doc_id, freq in pls:
             numerator = (k1 + 1) * freq * math.log((N + 1) / wdf, base_log) * (k3 + 1) * wqtf
-            denominator = freq + k1 * (1 - b + b * index.DL[doc_id] / AVGDL) * (k3 + wqtf)
+            denominator = freq + k1 * (1 - b + b * index.DL[doc_id] /index.AVGDL) * (k3 + wqtf)
             sim_dict[doc_id] += (numerator / denominator)
+    return sim_dict
 
 
 def get_top_n(sim_dict, N=100):
@@ -120,7 +121,7 @@ def get_top_n(sim_dict, N=100):
 def result_doc_to_title(arr, titles_dict):
     result = []
     for doc_id, score in arr:
-        result.append((doc_id, score, titles_dict[doc_id]))
+        result.append((doc_id, titles_dict[doc_id]))
     return result
 
 

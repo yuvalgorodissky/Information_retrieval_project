@@ -20,20 +20,20 @@ app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
 def init():
     global body_index
-    body_index = InvertedIndex.read_index("./body_index", "body_index")
+    # body_index = InvertedIndex.read_index("./body_index", "body_index")
     global title_index
-    title_index = InvertedIndex.read_index("./title_index", "title_index")
+    # title_index = InvertedIndex.read_index("./title_index", "title_index")
     global anchor_index
     anchor_index = InvertedIndex.read_index("./anchor_index", "anchor_index")
     global docid_title_dict
     with open('docid_title_dict.pkl', 'rb') as handle:
         docid_title_dict = pickle.load(handle)
     global pageRank_dict
-    with open('pageRank_dict.pickle', 'rb') as handle:
-        pageRank_dict = pickle.load(handle)
+    # with open('pageRank_dict.pickle', 'rb') as handle:
+        # pageRank_dict = pickle.load(handle)
     global page_view_dict
-    with open('pageviews_dict.pkl', 'rb') as handle:
-        page_view_dict = pickle.load(handle)
+    # with open('pageviews_dict.pkl', 'rb') as handle:
+        # page_view_dict = pickle.load(handle)
 
 
 
@@ -62,8 +62,10 @@ def search():
     # BEGIN SOLUTION
     query = query.lower()
     query = query.split()
-    cosine_similarity_dict = cosine_similarity(query, body_index)
-    res = get_top_n(cosine_similarity_dict)
+    body_dict = BM25(query, body_index)
+    title_dict =BM25(query, title_index)
+    res = get_top_n(merge_results(title_dict,body_dict))
+    res = result_doc_to_title(res,docid_title_dict)
     # END SOLUTION
     return jsonify(res)
 
@@ -93,7 +95,7 @@ def search_body():
     query = query.split()
     cosine_similarity_dict = cosine_similarity(query, body_index)
     res = get_top_n(cosine_similarity_dict)
-
+    res = result_doc_to_title(res,docid_title_dict)
     # END SOLUTION
     return jsonify(res)
 
@@ -128,6 +130,7 @@ def search_title():
     query = query.split()
     boolean_similarity_dict = boolean_similarity(query, title_index)
     res = get_top_n(boolean_similarity_dict,len(boolean_similarity_dict))
+    res = result_doc_to_title(res,docid_title_dict)
     # END SOLUTION
     return jsonify(res)
 
@@ -187,7 +190,14 @@ def get_pagerank():
     if len(wiki_ids) == 0:
         return jsonify(res)
     # BEGIN SOLUTION
-    res = get_page_rank(wiki_ids, pageRank_dict)
+    wiki=[]
+    for id in wiki_ids:
+        try:
+            wiki.append(int(id))
+        except:
+            continue
+    res = get_page_rank(wiki,page_view_dict)
+    res = result_doc_to_title(res,docid_title_dict)
     # END SOLUTION
     return jsonify(res)
 
@@ -215,7 +225,15 @@ def get_pageview():
     if len(wiki_ids) == 0:
         return jsonify(res)
     # BEGIN SOLUTION
-    res = get_page_views(wiki_ids,page_view_dict)
+    wiki=[]
+    for id in wiki_ids:
+        try:
+            wiki.append(int(id))
+        except:
+            continue
+    res = get_page_views(wiki,page_view_dict)
+    res = result_doc_to_title(res,docid_title_dict)
+
     # END SOLUTION
     return jsonify(res)
 
@@ -223,4 +241,11 @@ def get_pageview():
 if __name__ == '__main__':
     # run the Flask RESTful API, make the server publicly available (host='0.0.0.0') on port 8080
     init()
+    # query="torrei"
+    # query = query.lower()
+    # query = query.split()
+    # arr=[(46105,0.5),(1897206,0.7)]
+    # boolean_similarity_dict = boolean_similarity(query, anchor_index)
+    # res = get_top_n(boolean_similarity_dict, len(boolean_similarity_dict))
+    # print(result_doc_to_title(res,docid_title_dict))
     app.run(host='0.0.0.0', port=8080, debug=True)
