@@ -34,11 +34,12 @@ def cosine_similarity(query_to_search, index):
     for w, pls in index.posting_lists_iter_by_query(query_to_search):
         wdf = index.df[w]
         wqtf = query_dict[w]
+        idf = math.log(N / wdf, 10)
         for doc_id, freq in pls:
-            sim_dict[doc_id] += (freq / index.DL[doc_id]) * math.log(N / wdf, 10) * wqtf * index.nf[doc_id]
-    QL = len(query_to_search)
+            sim_dict[doc_id] += freq * idf * wqtf
+    Qnorm = math.sqrt(sum([tf ** 2 for tf in query_dict.values()]))
     for doc_id in sim_dict.keys():
-        sim_dict[doc_id] = sim_dict[doc_id] / QL
+        sim_dict[doc_id] = sim_dict[doc_id] * (1 / Qnorm) * index.nf[doc_id]
 
     return sim_dict
 
@@ -91,7 +92,7 @@ def BM25(query_to_search, index, b=0.75, k1=1.5, k3=1.5, base_log=10):
         wqtf = query_dict[w]
         for doc_id, freq in pls:
             numerator = (k1 + 1) * freq * math.log((N + 1) / wdf, base_log) * (k3 + 1) * wqtf
-            denominator = freq + k1 * (1 - b + b * index.DL[doc_id] /index.AVGDL) * (k3 + wqtf)
+            denominator = freq + k1 * (1 - b + b * index.DL[doc_id] / index.AVGDL) * (k3 + wqtf)
             sim_dict[doc_id] += (numerator / denominator)
     return sim_dict
 
@@ -126,8 +127,8 @@ def result_doc_to_title(arr, titles_dict):
 
 
 def get_page_views(pages, page_view_dict):
-    return [(doc_id, page_view_dict[doc_id]) for doc_id in pages]
+    return [(doc_id, page_view_dict.get(doc_id,0.0)) for doc_id in pages]
 
 
 def get_page_rank(pages, data):
-    return [(page, data[page]) for page in pages if page in data]
+    return [(page, data.get(page,0.0)) for page in pages if page in data]
