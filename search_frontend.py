@@ -1,19 +1,16 @@
 import pickle
-from collections import defaultdict, Counter
-
 import nltk
 import numpy as np
 from flask import Flask, request, jsonify
 from nltk.corpus import stopwords
-
 from inverted_index_gcp import InvertedIndex
 import pandas as pd
 import math
 from functions import *
 from datetime import datetime
+import re
 
 nltk.download('stopwords')
-
 
 class MyFlaskApp(Flask):
     def run(self, host=None, port=None, debug=None, **options):
@@ -32,6 +29,8 @@ def init():
     global pageRank_dict
     global page_view_dict
     global all_stopwords
+    global RE_WORD
+
 
     body_index = InvertedIndex.read_index("./body_index", "body_index")
     title_index = InvertedIndex.read_index("./title_index", "title_index")
@@ -51,7 +50,7 @@ def init():
 
     english_stopwords = frozenset(stopwords.words('english'))
     all_stopwords = english_stopwords.union(corpus_stopwords)
-
+    RE_WORD = re.compile(r"""[\#\@\w](['\-]?\w){2,24}""", re.UNICODE)
 
 @app.route("/search")
 def search():
@@ -76,9 +75,7 @@ def search():
     if len(query) == 0:
         return jsonify(res)
     # BEGIN SOLUTION
-    query = query.lower()
-    query = query.split()
-    query = [w for w in query if w not in all_stopwords]
+    query = [token.group() for token in RE_WORD.finditer(query.lower()) if token.group() not in all_stopwords ]
     body_dict = BM25(query, body_index)
     title_dict = BM25(query, title_index)
     res = get_top_n(merge_results(title_dict, body_dict))
@@ -108,9 +105,7 @@ def search_body():
     if len(query) == 0:
         return jsonify(res)
     # BEGIN SOLUTION
-    query = query.lower()
-    query = query.split()
-    query = [w for w in query if w not in all_stopwords]
+    query = [token.group() for token in RE_WORD.finditer(query.lower()) if token.group() not in all_stopwords]
     cosine_similarity_dict = cosine_similarity(query, body_index)
     res = get_top_n(cosine_similarity_dict)
     res = result_doc_to_title(res, docid_title_dict)
@@ -144,9 +139,7 @@ def search_title():
     if len(query) == 0:
         return jsonify(res)
     # BEGIN SOLUTION
-    query = query.lower()
-    query = query.split()
-    query = [w for w in query if w not in all_stopwords]
+    query = [token.group() for token in RE_WORD.finditer(query.lower()) if token.group() not in all_stopwords ]
     boolean_similarity_dict = boolean_similarity(query, title_index)
     res = get_top_n(boolean_similarity_dict, len(boolean_similarity_dict))
     res = result_doc_to_title(res, docid_title_dict)
@@ -180,9 +173,7 @@ def search_anchor():
     if len(query) == 0:
         return jsonify(res)
     # BEGIN SOLUTION
-    query = query.lower()
-    query = query.split()
-    query = [w for w in query if w not in all_stopwords]
+    query = [token.group() for token in RE_WORD.finditer(query.lower()) if token.group() not in all_stopwords]
     boolean_similarity_dict = boolean_similarity(query, anchor_index)
     res = get_top_n(boolean_similarity_dict, len(boolean_similarity_dict))
     res = result_doc_to_title(res, docid_title_dict)
@@ -259,4 +250,5 @@ def get_pageview():
 if __name__ == '__main__':
     # run the Flask RESTful API, make the server publicly available (host='0.0.0.0') on port 8080
     init()
+
     app.run(host='0.0.0.0', port=8080, debug=True)
