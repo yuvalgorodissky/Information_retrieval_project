@@ -43,7 +43,8 @@ The server receives queries in http requests in the following protocols:
 * http://server_domain/get_pagerank', json=[1,5,8]
 * http://server_domain/get_pageview', json=[1,5,8]
 
-
+## Summarize
+The development of an information retrieval engine can be challenging but also exciting and rewarding. The process of building an index, implementing similarity methods and fine-tuning the engine to maximize results requires technical skills and attention to detail. Additionally, the opportunity to work with a large corpus of data like the English Wikipedia can be interesting and provide valuable insights.
 
 
 Written by Yuval Gorodissky and Noam Azulay, students in the course.
