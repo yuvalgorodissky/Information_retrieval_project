@@ -34,6 +34,10 @@ def init():
     global page_view_dict
     global all_stopwords
     global RE_WORD
+    global word2vec_dict
+
+    word2vec_dict = api.load('glove-wiki-gigaword-50')
+    # original query
 
     body_index = InvertedIndex.read_index("./body_index", "body_index")
     title_index = InvertedIndex.read_index("./title_index", "title_index")
@@ -78,13 +82,11 @@ def search():
     res = []
     query = request.args.get('query', '')
 
-    p_body_cosine_similarity_in = p_body_cosine_similarity
-    p_body_BM25_in =p_body_BM25
-    p_body_boolean_in = p_body_boolean
-    # if '?' in query:
-    #     p_body_cosine_similarity_in*=3
-    #     p_body_BM25_in *= 3
-    #     p_body_boolean_in *= 3
+    p_body_BM25_in = p_body_BM25
+
+    if '?' in query:
+        p_body_BM25_in *= 3
+
     if len(query) == 0:
         return jsonify(res)
     # BEGIN SOLUTION
@@ -92,8 +94,14 @@ def search():
 
     query = [token.group() for token in RE_WORD.finditer(query.lower()) if token.group() not in all_stopwords]
     res = get_top_n(
-        boolean_n_BM25(query, body_index, title_index, page_view_dict,pageRank_dict, top_n2merge=top_n2merge, b=b_body_BM25,
-                       k1=k1_body_BM25, k3=k3_body_BM25, base_log=base_log_body_BM25,body_weight=p_body_BM25_in,title_weight=p_title_boolean))
+        boolean_n_BM25(query, body_index, title_index, page_view_dict, pageRank_dict, top_n2merge=top_n2merge,
+                       b=b_body_BM25,
+                       k1=k1_body_BM25, k3=k3_body_BM25, base_log=base_log_body_BM25, body_weight=p_body_BM25_in,
+                       title_weight=p_title_boolean))
+
+    # res = get_top_n(boolean_n_cosineSimilarity(query, body_index, title_index, page_view_dict, pageRank_dict,
+    #                                            top_n2merge=top_n2merge, body_weight=p_body_BM25_in,
+    #                                            title_weight=p_title_boolean))
     res = result_doc_to_title(res, docid_title_dict)
 
     # if p_title_cosine_similarity > 0:

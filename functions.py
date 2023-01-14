@@ -45,12 +45,11 @@ def cosine_similarity(query_to_search, index):
     return sim_dict
 
 
-def boolean_similarity(query_to_search, index, pl=None):
+def boolean_similarity(query_to_search, index):
     sim_dict = defaultdict(float)
-    if pl is None:
-        for w, pls in index.posting_lists_iter_by_query(query_to_search):
-            for doc_id, freq in pls:
-                sim_dict[doc_id] += 1
+    for w, pls in index.posting_lists_iter_by_query(query_to_search):
+        for doc_id, freq in pls:
+            sim_dict[doc_id] += 1
     return sim_dict
 
 
@@ -192,12 +191,14 @@ def merge_results_with_PW(dict_scores_weight, page_view_dict):
 #                 sim_dict[doc_id] = sim_dict.get(doc_id, 0.0) + (numerator / denominator)
 #     return sim_dict
 
-def boolean_n_BM25(query_to_search, index_body, index_title, page_view_dict,page_rank_dict, top_n2merge=300,b=0.75, k1=1.5, k3=1.5, base_log=10,body_weight=0.5,title_weight=0.5):
+def boolean_n_BM25(query_to_search, index_body, index_title, page_view_dict, page_rank_dict, expanded_query=None,
+                   top_n2merge=300, b=0.75, k1=1.5, k3=1.5, base_log=10, body_weight=0.5, title_weight=0.5):
     sim_dict = {}
     sim_dict_body, pl_body = boolean_similarity_n_pl(query_to_search, index_body)
     sim_dict_title, pl_title = boolean_similarity_n_pl(query_to_search, index_title)
     top_n_docs_by_boolean = get_top_n(
-        merge_results_with_PW_PR([(sim_dict_body,body_weight), (sim_dict_title, title_weight)], page_view_dict,page_rank_dict), top_n2merge)
+        merge_results_with_PW_PR([(sim_dict_body, body_weight), (sim_dict_title, title_weight)], page_view_dict,
+                                 page_rank_dict), top_n2merge)
 
     query_dict = Counter(query_to_search)
     N = len(index_body.DL)
@@ -207,8 +208,42 @@ def boolean_n_BM25(query_to_search, index_body, index_title, page_view_dict,page
         for doc_id, freq in pls:
             if doc_id in top_n_docs_by_boolean:
                 numerator = (k1 + 1) * freq * math.log((N + 1) / wdf, int(base_log)) * (k3 + 1) * wqtf
-                denominator = freq + k1 * (1 - b + b * index_body.DL.get(doc_id,index_body.AVGDL) / index_body.AVGDL) * (k3 + wqtf)
+                denominator = freq + k1 * (
+                        1 - b + b * index_body.DL.get(doc_id, index_body.AVGDL) / index_body.AVGDL) * (k3 + wqtf)
                 sim_dict[doc_id] = sim_dict.get(doc_id, 0.0) + (numerator / denominator)
+    for w, pls in pl_title:
+        wdf = index_title.df[w]
+        wqtf = query_dict[w]
+        for doc_id, freq in pls:
+            if doc_id in top_n_docs_by_boolean:
+                numerator = (k1 + 1) * freq * math.log((N + 1) / wdf, int(base_log)) * (k3 + 1) * wqtf
+                denominator = freq + k1 * (
+                        1 - b + b * index_title.DL.get(doc_id, index_title.AVGDL) / index_title.AVGDL) * (k3 + wqtf)
+                sim_dict[doc_id] = sim_dict.get(doc_id, 0.0) + (numerator / denominator)
+    return sim_dict
+
+
+def boolean_n_cosineSimilarity(query_to_search, index_body, index_title, page_view_dict, page_rank_dict,
+                               top_n2merge=300, body_weight=0.5, title_weight=0.5):
+    sim_dict = defaultdict(float)
+    sim_dict_body, pl_body = boolean_similarity_n_pl(query_to_search, index_body)
+    sim_dict_title, pl_title = boolean_similarity_n_pl(query_to_search, index_title)
+    top_n_docs_by_boolean = get_top_n(
+        merge_results_with_PW_PR([(sim_dict_body, body_weight), (sim_dict_title, title_weight)], page_view_dict,
+                                 page_rank_dict), top_n2merge)
+    query_dict = Counter(query_to_search)
+    N = len(index_body.DL)
+    for w, pls in pl_body:
+        wdf = index_body.df[w]
+        wqtf = query_dict[w]
+        idf = math.log(N / wdf, 10)
+        for doc_id, freq in pls:
+            if doc_id in top_n_docs_by_boolean:
+                sim_dict[doc_id] += freq * idf * wqtf
+    Qnorm = math.sqrt(sum([tf ** 2 for tf in query_dict.values()]))
+    for doc_id in sim_dict.keys():
+        sim_dict[doc_id] = sim_dict[doc_id] * (1 / Qnorm) * index_body.nf[doc_id]
+
     return sim_dict
 
 
@@ -222,10 +257,7 @@ def boolean_similarity_n_pl(query_to_search, index):
     return sim_dict, pl
 
 
-
-
-
-def merge_results_with_PW_PR(dict_scores_weight, page_view_dict,page_rank_dict):
+def merge_results_with_PW_PR(dict_scores_weight, page_view_dict, page_rank_dict):
     """
     This function merge and sort documents retrieved by its weighte score (e.g., title and body).
 
@@ -252,5 +284,6 @@ def merge_results_with_PW_PR(dict_scores_weight, page_view_dict,page_rank_dict):
     merge_dict = {}
     for d, weight in dict_scores_weight:
         for doc_id, score in d.items():
-            merge_dict[doc_id] = merge_dict.get(doc_id, 0.0) + score * weight * math.log(page_view_dict.get(doc_id, 0) + 2, 2)* math.log(page_rank_dict.get(doc_id, 0) + 2, 2)
+            merge_dict[doc_id] = merge_dict.get(doc_id, 0.0) + score * weight * math.log(
+                page_view_dict.get(doc_id, 0) + 2, 2) * math.log(page_rank_dict.get(doc_id, 0) + 2, 2)
     return merge_dict
