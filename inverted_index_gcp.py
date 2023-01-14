@@ -16,7 +16,7 @@ from collections import defaultdict
 from contextlib import closing
 
 # Let's start with a small block size of 30 bytes just to test things out.
-BLOCK_SIZE = 1999998
+BLOCK_SIZE = 3840000
 
 
 class MultiFileWriter:
@@ -94,6 +94,7 @@ TUPLE_SIZE = 6  # We're going to pack the doc_id and tf values in this
 # many bytes.
 TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
 
+TUPLE_SIZE_DOC = 16
 
 class InvertedIndex:
 
@@ -185,6 +186,23 @@ class InvertedIndex:
                         tf = int.from_bytes(b[i * TUPLE_SIZE + 4:(i + 1) * TUPLE_SIZE], 'big')
                         posting_list.append((doc_id, tf))
                     yield w, posting_list
+    
+    
+    def posting_lists_iter_by_doc(self, docs_id):
+        """ A generator that reads one posting list from disk and yields
+            a (word:str, [(doc_id:int, tf:int), ...]) tuple.
+        """
+        with closing(MultiFileReader()) as reader:
+            for doc_id in docs_id:
+                if doc_id in self.posting_locs:
+                    locs = self.posting_locs[doc_id]
+                    b = reader.read(locs, self.df[doc_id] * TUPLE_SIZE_DOC, self.base_dir)
+                    posting_list = []
+                    for i in range(self.df[doc_id]):
+                        word = b[i*TUPLE_SIZE_DOC:i*TUPLE_SIZE_DOC+12].decode().strip()
+                        tf = int.from_bytes(b[i * TUPLE_SIZE_DOC + 12:(i + 1) * TUPLE_SIZE_DOC], 'big')
+                        posting_list.append((word, tf))
+                    yield doc_id, posting_list
 
     @staticmethod
     def read_index(base_dir, name):
@@ -217,7 +235,28 @@ class InvertedIndex:
             writer.upload_to_gcp(base_dir)
             InvertedIndex._upload_posting_locs(bucket_id, posting_locs, bucket_name, base_dir)
         return bucket_id
+    
+    @staticmethod
+    def write_a_posting_list_doc(b_w_pl, bucket_name, base_dir):
+        posting_locs = defaultdict(list)
+        bucket_id, list_w_pl = b_w_pl
 
+        with closing(MultiFileWriter(".", bucket_id, bucket_name)) as writer:
+            for doc_id, pl in list_w_pl:
+                # convert to bytes
+                b = b''.join([(word.ljust(12).encode() + int.to_bytes(tf, 4, byteorder='big')) for word, tf in pl])
+                # write to file(s)
+                locs = writer.write(b, base_dir)
+                # save file locations to index
+                posting_locs[doc_id].extend(locs)
+            writer.close()
+            writer.upload_to_gcp(base_dir)
+            InvertedIndex._upload_posting_locs(bucket_id, posting_locs, bucket_name, base_dir)
+        return bucket_id
+
+    
+   
+   
     @staticmethod
     def _upload_posting_locs(bucket_id, posting_locs, bucket_name, base_dir):
         with open(f"{bucket_id}_posting_locs.pickle", "wb") as f:
