@@ -17,11 +17,9 @@ Similarity methods we implemented are:
 4. TF-IDF [TF-IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)
 Our implementation can see [here](functions.py)
 
-
-To search you need to run the server
 ## Our best search
 At this project we were asked to provide the best retrieval method from the options we learned in the course.
-The method that maximized our results was to use the *Boolean moodle* on the body and the title to retrieve a number of about 200 documents and then to retrieve from them with *BM25* while giving priority to documents with high pageview and pagerank
+The method that maximized our results was to use the *Boolean model* on the body and the title to retrieve a number of about 200 documents and then to retrieve from them with *BM25* while giving priority to documents with high *pageview* and *pagerank*
 
 
 ## Mendatory search methods
@@ -31,6 +29,9 @@ You have 5 search options:
 3. Search in anchor text by the Boolean module
 4. Search pageview of a document
 5. Search pagerank of a document
+
+
+## How to start search
 
 ## Testing
 
