@@ -34,7 +34,7 @@ You have 5 search options:
 
 
 ## How to start search
-To activate the engine, you have to run the [search_frontend.py](search_frontend.py) file that initializes the application. Initially, when the application comes up, it loads the Indexes and initialize initialize variable then the server opens.
+To activate the engine, you have to run the [search_frontend.py](search_frontend.py) file that initializes the application. Initially, when the application comes up, it loads the Indexes and initialize initialize variables then the server opens.
 The server receives queries in http requests in the following protocols:
 * http://server_domain/search?query=hello+world
 * http://server_domain/search_body?query=hello+world
