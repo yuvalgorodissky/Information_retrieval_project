@@ -7,7 +7,7 @@ In this project we built a retrieval engine to retrieve information from the Eng
 ## How we retrieve information :
 
 ## Indexing:
-Building the index of the corpus, indexing the body to the title and anchoring the text of a document.For the purpose of construction, we used Google's cloud [Google Cloud](https://cloud.google.com/) and the Spark library [Spark](https://spark.apache.org/docs/latest/rdd-programming-guide.html) to calculate the index. You can see it in the following document[Inverted Index Maker](inverted_indexes_maker/).
+Building the index of the corpus, indexing the body to the title and anchoring the text of a document.For the purpose of construction, we used Google's cloud [Google Cloud](https://cloud.google.com/) and the Spark library [Spark](https://spark.apache.org/docs/latest/rdd-programming-guide.html) to calculate the index. You can see it in the following document [Inverted Index Maker](inverted_indexes_maker/inveted_index_makers.ipynb).
 
 ## Similarity Methods:
 Similarity methods we implemented are:
