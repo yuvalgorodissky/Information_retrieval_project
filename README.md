@@ -15,6 +15,8 @@ Similarity methods we implemented are:
 * Cosine Similarity [Cosine Similarity](https://en.wikipedia.org/wiki/Cosine_similarity)
 * BM25 [BM25](https://en.wikipedia.org/wiki/Okapi_BM25)
 * TF-IDF [TF-IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)
+
+
 Our implementation can see [here](functions.py)
 
 ## Our best search
