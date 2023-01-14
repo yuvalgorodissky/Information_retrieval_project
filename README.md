@@ -1,5 +1,5 @@
 # Information Retrieval Project
-This is a repository for final assignment of the Information Retrieval course at the [Ben-Gurion University](https://in.bgu.ac.il/), Israel.
+This is a repository for final assignment of Information Retrieval course at the [Ben-Gurion University](https://in.bgu.ac.il/), Israel.
 
 ## Assignment Description
 In this project we built a retrieval engine to retrieve information from the English [Wikipedia](https://www.wikipedia.org/) corpus .
