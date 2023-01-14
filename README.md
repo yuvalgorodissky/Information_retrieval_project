@@ -11,10 +11,10 @@ Building the index of the corpus, indexing the body to the title and anchoring t
 
 ## Similarity Methods:
 Similarity methods we implemented are:
-1. The Boolean model [Boolean model](https://en.wikipedia.org/wiki/Boolean_model_of_information_retrieval#:~:text=The%20BIR%20is%20based%20on,documents%20contain%20the%20query%20terms.)
-2.Cosine Similarity [Cosine Similarity](https://en.wikipedia.org/wiki/Cosine_similarity)
-3. BM25 [BM25](https://en.wikipedia.org/wiki/Okapi_BM25)
-4. TF-IDF [TF-IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)
+* The Boolean model [Boolean model](https://en.wikipedia.org/wiki/Boolean_model_of_information_retrieval#:~:text=The%20BIR%20is%20based%20on,documents%20contain%20the%20query%20terms.) 
+* Cosine Similarity [Cosine Similarity](https://en.wikipedia.org/wiki/Cosine_similarity)
+* BM25 [BM25](https://en.wikipedia.org/wiki/Okapi_BM25)
+* TF-IDF [TF-IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)
 Our implementation can see [here](functions.py)
 
 ## Our best search
