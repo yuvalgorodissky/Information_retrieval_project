@@ -27,8 +27,8 @@ The method that maximized our results was to use the **Boolean model** on the bo
 ## Mendatory search methods
 You have 5 search options:
 1. Search in the body of the document by cosine simularity
-2. Search in the title of the document by the Boolean moodel
-3. Search in anchor text by the Boolean moodel
+2. Search in the title of the document by the Boolean model
+3. Search in anchor text by the Boolean model
 4. Search pageview of a document
 5. Search pagerank of a document
 
