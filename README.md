@@ -1,5 +1,5 @@
 # Information Retrieval Project
-This is a repository for final assignment of the Information Retrieval course at the [Ben-Gurion University](https://in.bgu.ac.il/), Israel.
+This is a repository for final assignment of Information Retrieval course at the [Ben-Gurion University](https://in.bgu.ac.il/), Israel.
 
 ## Assignment Description
 In this project we built a retrieval engine to retrieve information from the English [Wikipedia](https://www.wikipedia.org/) corpus .
@@ -7,7 +7,7 @@ In this project we built a retrieval engine to retrieve information from the Eng
 ## How we retrieve information :
 
 ## Indexing:
-Building the index of the corpus, indexing the body to the title and anchoring the text of a document.For the purpose of construction, we used [Google Cloud](https://cloud.google.com/) and the [Spark](https://spark.apache.org/docs/latest/rdd-programming-guide.html) library to calculate the index. You can see it in the following document [Inverted Index Maker](inverted_indexes_maker/inveted_index_makers.ipynb).
+Building the index of the corpus, indexing the body to the title and anchoring the text of a document.For the purpose of construction, we used [Google Cloud](https://cloud.google.com/) and the [Spark](https://spark.apache.org/docs/latest/rdd-programming-guide.html) library to calculate the index. You can see it in the following document [Inverted Index Maker](inverted_indexes_maker/inverted_index_makers.ipynb).
 
 ## Similarity Methods:
 Similarity methods we implemented are:
@@ -21,20 +21,20 @@ Our implementation can see [here](functions.py)
 
 ## Our best search
 At this project we were asked to provide the best retrieval method from the options we learned in the course.
-The method that maximized our results was to use the *Boolean model* on the body and the title to retrieve a number of about 200 documents and then to retrieve from them with *BM25* while giving priority to documents with high *pageview* and *pagerank*
+The method that maximized our results was to use the **Boolean model** on the body and the title to retrieve a number of about 200 documents and then to retrieve from them with **BM25** while giving priority to documents with high **pageview** and **pagerank**
 
 
 ## Mendatory search methods
 You have 5 search options:
 1. Search in the body of the document by cosine simularity
-2. Search in the title of the document by the Boolean module
-3. Search in anchor text by the Boolean module
+2. Search in the title of the document by the Boolean model
+3. Search in anchor text by the Boolean model
 4. Search pageview of a document
 5. Search pagerank of a document
 
 
 ## How to start search
-To activate the engine, you have to run the [search_frontend.py](search_frontend.py) file that initializes the application. Initially, when the application comes up, it loads the Indexes and initialize initialize variable then the server opens.
+To activate the engine, you have to run the [search_frontend.py](search_frontend.py) file that initializes the application. Initially, when the application comes up, it loads the Indexes and initialize initialize variables then the server opens.
 The server receives queries in http requests in the following protocols:
 * http://server_domain/search?query=hello+world
 * http://server_domain/search_body?query=hello+world
