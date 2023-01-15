@@ -23,6 +23,7 @@ class MyFlaskApp(Flask):
 app = MyFlaskApp(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
+question_words = ["what", "where", "who", "why", "how", "whom", "which", "whose", "when", "can","could"]
 
 def init():
     global body_index
@@ -35,6 +36,9 @@ def init():
     global all_stopwords
     global RE_WORD
     global word2vec_dict
+    global body_index_stemming
+    global title_index_stemming
+
 
     word2vec_dict = api.load('glove-wiki-gigaword-50')
     # original query
@@ -42,7 +46,6 @@ def init():
     body_index = InvertedIndex.read_index("./body_index", "body_index")
     title_index = InvertedIndex.read_index("./title_index", "title_index")
     anchor_index = InvertedIndex.read_index("./anchor_index", "anchor_index")
-    # doc_index = InvertedIndex.read_index("./body_docs_index", "body_docs_index")
 
     with open('docid_title_dict.pkl', 'rb') as handle:
         docid_title_dict = pickle.load(handle)
@@ -83,45 +86,27 @@ def search():
     query = request.args.get('query', '')
 
     p_body_BM25_in = p_body_BM25
-
     if '?' in query:
-        p_body_BM25_in *= 3
+        p_body_BM25_in *=3
 
     if len(query) == 0:
         return jsonify(res)
     # BEGIN SOLUTION
-    all_models = []
 
     query = [token.group() for token in RE_WORD.finditer(query.lower()) if token.group() not in all_stopwords]
     res = get_top_n(
         boolean_n_BM25(query, body_index, title_index, page_view_dict, pageRank_dict, top_n2merge=top_n2merge,
                        b=b_body_BM25,
                        k1=k1_body_BM25, k3=k3_body_BM25, base_log=base_log_body_BM25, body_weight=p_body_BM25_in,
-                       title_weight=p_title_boolean))
+                       title_weight=p_title_BM25))
 
     # res = get_top_n(boolean_n_cosineSimilarity(query, body_index, title_index, page_view_dict, pageRank_dict,
     #                                            top_n2merge=top_n2merge, body_weight=p_body_BM25_in,
     #                                            title_weight=p_title_boolean))
-    res = result_doc_to_title(res, docid_title_dict)
 
-    # if p_title_cosine_similarity > 0:
-    #     all_models.append((normalize_dict(cosine_similarity(query, title_index)), p_title_cosine_similarity))
-    # if p_title_BM25 > 0:
-    #     all_models.append((normalize_dict(
-    #         BM25(query, title_index, b=b_title_BM25, k1=k1_title_BM25, k3=k3_title_BM25, base_log=base_log_title_BM25)),
-    #                        p_title_BM25))
-    # if p_title_boolean > 0:
-    #     all_models.append((normalize_dict(boolean_similarity(query, title_index)), p_title_boolean))
-    # if p_body_cosine_similarity_in > 0:
-    #     all_models.append((normalize_dict(cosine_similarity(query, body_index)), p_body_cosine_similarity_in))
-    # if p_body_BM25_in > 0:
-    #     all_models.append(
-    #         (normalize_dict(
-    #             BM25(query, body_index, b=b_body_BM25, k1=k1_body_BM25, k3=k3_body_BM25, base_log=base_log_body_BM25)),
-    #          p_body_BM25_in))
-    # if p_body_boolean_in > 0:
-    #     all_models.append((normalize_dict(boolean_similarity(query, body_index)), p_body_boolean_in))
-    # res = get_top_n(merge_results(all_models))
+
+
+    res = result_doc_to_title(res, docid_title_dict)
 
     # END SOLUTION
     return jsonify(res)
@@ -358,6 +343,7 @@ def set_parameters():
     base_log_body_BM25 = parameters[13]
 
     top_n2merge = int(parameters[14])
+
 
     # END SOLUTION
     return jsonify([True])

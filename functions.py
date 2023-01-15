@@ -40,7 +40,7 @@ def cosine_similarity(query_to_search, index):
             sim_dict[doc_id] += freq * idf * wqtf
     Qnorm = math.sqrt(sum([tf ** 2 for tf in query_dict.values()]))
     for doc_id in sim_dict.keys():
-        sim_dict[doc_id] = sim_dict[doc_id] * (1 / Qnorm) * index.nf[doc_id]
+        sim_dict[doc_id] = sim_dict[doc_id] * (1 / Qnorm) * index.nf.get(doc_id,0.1)
 
     return sim_dict
 
