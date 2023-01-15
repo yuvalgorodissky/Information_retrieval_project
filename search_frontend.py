@@ -13,6 +13,7 @@ from itertools import chain
 import gensim.downloader as api
 
 nltk.download('stopwords')
+nltk.download('averaged_perceptron_tagger')
 
 
 class MyFlaskApp(Flask):
@@ -23,7 +24,8 @@ class MyFlaskApp(Flask):
 app = MyFlaskApp(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
-question_words = ["what", "where", "who", "why", "how", "whom", "which", "whose", "when", "can","could"]
+question_words = ["what", "where", "who", "why", "how", "whom", "which", "whose", "when", "can", "could", "?"]
+
 
 def init():
     global body_index
@@ -35,13 +37,6 @@ def init():
     global page_view_dict
     global all_stopwords
     global RE_WORD
-    global word2vec_dict
-    global body_index_stemming
-    global title_index_stemming
-
-
-    word2vec_dict = api.load('glove-wiki-gigaword-50')
-    # original query
 
     body_index = InvertedIndex.read_index("./body_index", "body_index")
     title_index = InvertedIndex.read_index("./title_index", "title_index")
@@ -82,29 +77,39 @@ def search():
         list of up to 100 search results, ordered from best to worst where each
         element is a tuple (wiki_id, title).
     '''
+    weight_body = 0.333
+    weight_title = 0.667
+    b = 0.25
+    k1 = 1.5
+    k3 = 2.5
+    top_n2merge = 230
     res = []
+    isQuestion = False
     query = request.args.get('query', '')
 
-    p_body_BM25_in = p_body_BM25
-    if '?' in query:
-        p_body_BM25_in *=3
+    weight_body_in = weight_body
+    query = query.lower()
+    for word in question_words:
+        if word in query:
+            isQuestion = True
+            break
 
     if len(query) == 0:
         return jsonify(res)
     # BEGIN SOLUTION
+    query = [token.group() for token in RE_WORD.finditer(query) if token.group() not in all_stopwords]
+    if isQuestion:
+        try:
+            pos_tags = nltk.pos_tag(query)
+            keywords = [word for word, pos in pos_tags if pos.startswith("NN")]
+            query = query + keywords * 2
+        except:
+            pass
+        weight_body *= 3
 
-    query = [token.group() for token in RE_WORD.finditer(query.lower()) if token.group() not in all_stopwords]
     res = get_top_n(
-        boolean_n_BM25(query, body_index, title_index, page_view_dict, pageRank_dict, top_n2merge=top_n2merge,
-                       b=b_body_BM25,
-                       k1=k1_body_BM25, k3=k3_body_BM25, base_log=base_log_body_BM25, body_weight=p_body_BM25_in,
-                       title_weight=p_title_BM25))
-
-    # res = get_top_n(boolean_n_cosineSimilarity(query, body_index, title_index, page_view_dict, pageRank_dict,
-    #                                            top_n2merge=top_n2merge, body_weight=p_body_BM25_in,
-    #                                            title_weight=p_title_boolean))
-
-
+        boolean_n_BM25(query, body_index, title_index, page_view_dict, pageRank_dict, top_n2merge=top_n2merge, b=b,
+                       k1=k1, k3=k3, body_weight=weight_body_in, title_weight=weight_title))
 
     res = result_doc_to_title(res, docid_title_dict)
 
@@ -275,81 +280,8 @@ def get_pageview():
     return jsonify(res)
 
 
-@app.route("/set_parameters", methods=['POST'])
-def set_parameters():
-    '''
-        set the parameters of the search in the this order:
-     p_title_cosine_similarity
-     p_title_boolean
-     p_title_BM25
-     b_title_BM25
-     k1_title_BM25
-     k3_title_BM25
-     base_log_title_BM25
-
-     p_body_cosine_similarity
-     p_body_boolean
-     p_body_BM25
-     b_body_BM25
-     k1_body_BM25
-     k3_body_BM25
-     base_log_body_BM25
-        '''
-    all_param = request.get_json()
-    if len(all_param) != 15:
-        return jsonify([False])
-    # BEGIN SOLUTION
-    parameters = []
-    for param in all_param:
-        try:
-            if (float(param) < 0):
-                return jsonify([False])
-            parameters.append(float(param))
-
-        except:
-            return jsonify([False])
-    global p_title_cosine_similarity
-    global p_title_boolean
-    global p_title_BM25
-    global b_title_BM25
-    global k1_title_BM25
-    global k3_title_BM25
-    global base_log_title_BM25
-
-    global p_body_cosine_similarity
-    global p_body_boolean
-    global p_body_BM25
-    global b_body_BM25
-    global k1_body_BM25
-    global k3_body_BM25
-    global base_log_body_BM25
-
-    global top_n2merge
-
-    p_title_cosine_similarity = parameters[0]
-    p_title_boolean = parameters[1]
-    p_title_BM25 = parameters[2]
-    b_title_BM25 = parameters[3]
-    k1_title_BM25 = parameters[4]
-    k3_title_BM25 = parameters[5]
-    base_log_title_BM25 = parameters[6]
-
-    p_body_cosine_similarity = parameters[7]
-    p_body_boolean = parameters[8]
-    p_body_BM25 = parameters[9]
-    b_body_BM25 = parameters[10]
-    k1_body_BM25 = parameters[11]
-    k3_body_BM25 = parameters[12]
-    base_log_body_BM25 = parameters[13]
-
-    top_n2merge = int(parameters[14])
-
-
-    # END SOLUTION
-    return jsonify([True])
-
-
 if __name__ == '__main__':
     # run the Flask RESTful API, make the server publicly available (host='0.0.0.0') on port 8080
     init()
+
     app.run(host='0.0.0.0', port=8080, debug=True)
