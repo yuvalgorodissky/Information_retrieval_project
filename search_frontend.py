@@ -102,7 +102,7 @@ def search():
         try:
             pos_tags = nltk.pos_tag(query)
             keywords = [word for word, pos in pos_tags if pos.startswith("NN")]
-            query = query + keywords * 2
+            query = query + keywords * 10
         except:
             pass
         weight_body *= 3
@@ -110,6 +110,7 @@ def search():
     res = get_top_n(
         boolean_n_BM25(query, body_index, title_index, page_view_dict, pageRank_dict, top_n2merge=top_n2merge, b=b,
                        k1=k1, k3=k3, body_weight=weight_body_in, title_weight=weight_title))
+
 
     res = result_doc_to_title(res, docid_title_dict)
 
