@@ -129,11 +129,11 @@ def result_doc_to_title(arr, titles_dict):
 
 
 def get_page_views(pages, page_view_dict):
-    return [(doc_id, page_view_dict.get(doc_id, 0.0)) for doc_id in pages]
+    return [page_view_dict.get(doc_id, 0.0) for doc_id in pages]
 
 
 def get_page_rank(pages, data):
-    return [(page, data.get(page, 0.0)) for page in pages]
+    return [data.get(page, 0.0) for page in pages]
 
 def boolean_n_BM25(query_to_search, index_body, index_title, page_view_dict, page_rank_dict,
                    top_n2merge=300, b=0.75, k1=1.5, k3=1.5, base_log=10, body_weight=0.5, title_weight=0.5):
