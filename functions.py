@@ -46,6 +46,9 @@ def cosine_similarity(query_to_search, index):
 
 
 def boolean_similarity(query_to_search, index):
+    """
+        This function is used to perform a search using the boolean similarity method on a given index, for a given query.
+    """
     sim_dict = defaultdict(float)
     for w, pls in index.posting_lists_iter_by_query(query_to_search):
         for doc_id, freq in pls:
@@ -85,6 +88,10 @@ def merge_results(dict_scores_weight):
 
 
 def BM25(query_to_search, index, b=0.75, k1=1.5, k3=1.5, base_log=10):
+    """
+    This function is for the BM25 ranking algorithm which is used to rank the documents based on their relevance to the query.
+    The function takes in several parameters, including the query and an index of documents.
+    """
     sim_dict = {}
     query_dict = Counter(query_to_search)
     N = len(index.DL)
@@ -122,6 +129,16 @@ def get_top_n(sim_dict, N=100):
 
 
 def result_doc_to_title(arr, titles_dict):
+    """
+
+    Args:
+        arr: array of doc_id
+        titles_dict: dict that the key is doc id and value is the title
+
+    Returns:
+        array of tuples [(doc_id,title),(doc_id,title)....]
+
+    """
     result = []
     for doc_id in arr:
         result.append((doc_id, titles_dict.get(doc_id, "Not found doc title")))
@@ -129,14 +146,38 @@ def result_doc_to_title(arr, titles_dict):
 
 
 def get_page_views(pages, page_view_dict):
+    """
+
+    Args:
+        pages: array of doc_id
+        page_view_dict: dict that the key is doc id and value is the page view
+
+    Returns: array of page view
+
+    """
     return [page_view_dict.get(doc_id, 0.0) for doc_id in pages]
 
 
 def get_page_rank(pages, data):
+    """
+
+    Args:
+        pages: array of doc_id
+        page_rank_dict: dict that the key is doc id and value is the page rank
+
+    Returns: array of page rank
+
+    """
     return [data.get(page, 0.0) for page in pages]
 
 def boolean_n_BM25(query_to_search, index_body, index_title, page_view_dict, page_rank_dict,
                    top_n2merge=300, b=0.75, k1=1.5, k3=1.5, base_log=10, body_weight=0.5, title_weight=0.5):
+    """
+
+    This function is used to perform a search on two different indices, one for the body of the documents and one for the
+    titles of the documents. The function applies both boolean similarity and BM25 ranking algorithm to the search results.
+
+    """
     sim_dict = {}
     sim_dict_body, pl_body = boolean_similarity_n_pl(query_to_search, index_body)
     sim_dict_title, pl_title = boolean_similarity_n_pl(query_to_search, index_title)
@@ -168,6 +209,12 @@ def boolean_n_BM25(query_to_search, index_body, index_title, page_view_dict, pag
 
 def boolean_n_cosineSimilarity(query_to_search, index_body, index_title, page_view_dict, page_rank_dict,
                                top_n2merge=300, body_weight=0.5, title_weight=0.5):
+    """
+
+      This function is used to perform a search on two different indices, one for the body of the documents and one for the
+      titles of the documents. The function applies both boolean similarity and cosine-similarity ranking algorithm to the search results.
+
+      """
     sim_dict = defaultdict(float)
     sim_dict_body, pl_body = boolean_similarity_n_pl(query_to_search, index_body)
     sim_dict_title, pl_title = boolean_similarity_n_pl(query_to_search, index_title)
@@ -191,6 +238,10 @@ def boolean_n_cosineSimilarity(query_to_search, index_body, index_title, page_vi
 
 
 def boolean_similarity_n_pl(query_to_search, index):
+    """
+        This function is used to perform a search using the boolean similarity method on a given index, for a given query.
+        and return the posting list
+    """
     sim_dict = defaultdict(float)
     pl = []
     for w, pls in index.posting_lists_iter_by_query(query_to_search):

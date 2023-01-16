@@ -102,7 +102,7 @@ def search():
         try:
             pos_tags = nltk.pos_tag(query)
             keywords = [word for word, pos in pos_tags if pos.startswith("NN")]
-            query = query + keywords * 10
+            query = query + keywords * 15
         except:
             pass
         weight_body *= 3
